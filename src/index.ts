@@ -8,6 +8,8 @@ import { Server } from 'socket.io';
 import mongoose from 'mongoose';
 import Message from './models/message.js';
 
+import jwt from 'jsonwebtoken';
+
 dotenv.config();
 
 const app = express();
@@ -28,11 +30,29 @@ app.use(helmet());
 app.use(express.json());
 
 import chatRoutes from './routes/chat.js';
+import authRoutes from './routes/auth.js';
+
 app.use('/chat', chatRoutes);
+app.use('/auth', authRoutes);
+
+
+io.use((socket, next) => {
+    const token = socket.handshake.auth.token;
+    if (!token) return next(new Error("Authentication error"));
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET!);
+        (socket as any).user = decoded;
+        next();
+    } catch {
+        next(new Error("Authentication error"));
+    }
+});
+
 
 //Socket.IO events
 io.on('connection', (socket)=>{
-    console.log(`User ${socket.id}`);
+    console.log(`Authenticated user connected: ${socket.id} ${(socket as any).user.id}`);
 
     socket.on('joinRoom', (roomId)=>{
         socket.join(roomId);
@@ -59,5 +79,5 @@ io.on('connection', (socket)=>{
 });
 
 app.listen(PORT, ()=>{
-    console.log(`server is running at http://localhost:${{PORT}}`);
+    console.log(`server is running at http://localhost:${PORT}`);
 })
