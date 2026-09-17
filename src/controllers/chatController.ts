@@ -1,29 +1,46 @@
 import type { Request, Response } from "express";
-import { messages } from "../models/message.js";
+// import { messages } from "../models/message.js";
+import Message from "../models/message.js";
 
-export const getMessages = (req: Request, res: Response) =>{
+// export const getMessages = (req: Request, res: Response) =>{
+//     const { roomId } = req.params;
+//     const roomMessages = messages.filter(m => m.roomId === roomId);
+//     res.json(roomMessages);
+// };
+
+// export const sendMessages = (req :Request, res :Response) =>{
+//     const { roomId } = req.params;
+//     const { sender, content } = req.body;
+
+//     if (typeof roomId !== "string") {
+//         res.status(400).json({ error: "Invalid room ID" });
+//         return;
+//     }
+
+//     const newMMessage = {
+//         id: Date.now().toString(),
+//         roomId,
+//         sender,
+//         content,
+//         createdAt: new Date()
+//     };
+
+//     messages.push(newMMessage);
+//     res.status(201).json(newMMessage);
+// };
+
+export const getMessages = async (req: Request <{roomId: string}>, res: Response) => {
     const { roomId } = req.params;
-    const roomMessages = messages.filter(m => m.roomId === roomId);
+    const roomMessages  = await Message.find({ roomId: roomId }).sort({ createdAt: 1});
     res.json(roomMessages);
 };
 
-export const sendMessages = (req :Request, res :Response) =>{
+export const sendMessage = async (req: Request, res: Response) => {
     const { roomId } = req.params;
     const { sender, content } = req.body;
 
-    if (typeof roomId !== "string") {
-        res.status(400).json({ error: "Invalid room ID" });
-        return;
-    }
+    const newMessage = new Message({ roomId, sender, content});
+    await newMessage.save();
 
-    const newMMessage = {
-        id: Date.now().toString(),
-        roomId,
-        sender,
-        content,
-        createdAt: new Date()
-    };
-
-    messages.push(newMMessage);
-    res.status(201).json(newMMessage);
+    res.status(201).json(newMessage);
 };
