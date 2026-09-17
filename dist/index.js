@@ -63,7 +63,7 @@ io.on('connection', (socket) => {
         console.log(`User disconnected: ${socket.id}`);
     });
 });
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`server is running at http://localhost:${PORT}`);
 });
 //# sourceMappingURL=index.js.map
